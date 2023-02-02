@@ -5,20 +5,27 @@
 @using System.Collections.ObjectModel
 @using System.ComponentModel
 
-
+<AuthorizeView>
+    <Authorized>
+        <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
+            <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
+            <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
+            <ScheduleViews>
+                <ScheduleView Option="View.Day"></ScheduleView>
+                <ScheduleView Option="View.Week"></ScheduleView>
+                <ScheduleView Option="View.WorkWeek"></ScheduleView>
+                <ScheduleView Option="View.Month"></ScheduleView>
+                <ScheduleView Option="View.Agenda"></ScheduleView>
+            </ScheduleViews>
+        </SfSchedule>
+    </Authorized>
+    <NotAuthorized>
+        <img src="https://i.gifer.com/origin/51/51f1ea94effbb251598e67e8522e58f5.gif" />
+    </NotAuthorized>
+</AuthorizeView>
 <PageTitle>Index</PageTitle>
 
-<SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
-    <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
-    <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
-    <ScheduleViews>
-        <ScheduleView Option="View.Day"></ScheduleView>
-        <ScheduleView Option="View.Week"></ScheduleView>
-        <ScheduleView Option="View.WorkWeek"></ScheduleView>
-        <ScheduleView Option="View.Month"></ScheduleView>
-        <ScheduleView Option="View.Agenda"></ScheduleView>
-    </ScheduleViews>
-</SfSchedule>
+
 
 @code {
     SfSchedule<AppointmentData> ScheduleRef;

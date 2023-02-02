@@ -16,6 +16,7 @@ public partial class ToDoAppContext : DbContext
         : base(options)
     {
     }
+    public DbSet<User> User { get; set; } = default!;
 
     public virtual DbSet<AppointmentData> AppointmentData { get; set; }
 

@@ -51,4 +51,6 @@ app.MapFallbackToFile("index.html");
 
 app.MapAppointmentDataEndpoints();
 
+app.MapUserEndpoints();
+
 app.Run();

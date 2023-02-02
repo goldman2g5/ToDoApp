@@ -1,0 +1,75 @@
+﻿@page "/register";
+@using System.Net
+@using System.Text.RegularExpressions
+@inject HttpClient client
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudTextField T="string" Label="Username" Required="true" RequiredError="User name is required!" @bind-Value="username" />
+                <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1" @bind-Value="password"
+                              InputType="InputType.Password"
+                              Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                              RequiredError="Password is required!" />
+                <MudTextField T="string"
+                              Label="Password" HelperText="Repeat the password" InputType="InputType.Password"
+                              Validation="@(new Func<string, string>(PasswordMatch))" />
+                <div class="d-flex align-center justify-space-between">                 
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="HandleRegister">Register</MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    string username = string.Empty;
+    string password = string.Empty;
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField1 = new MudTextField<string>();
+    MudForm form = new();
+
+
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+        if (pw.Length < 3)
+            yield return "Password must be at least of length 3";
+        //if (!Regex.IsMatch(pw, @"[A-Z]"))
+        //    yield return "Password must contain at least one capital letter";
+        //if (!Regex.IsMatch(pw, @"[a-z]"))
+        //    yield return "Password must contain at least one lowercase letter";
+        //if (!Regex.IsMatch(pw, @"[0-9]"))
+        //    yield return "Password must contain at least one digit";
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (pwField1.Value != arg)
+            return "Passwords don't match";
+        return null;
+    }
+
+    async Task HandleRegister()
+    {
+        await client.PostAsJsonAsync("api/auth/register", new UserDto()
+            {
+                Username = username,
+                Password = password
+            });
+        NavigationManager.NavigateTo("/Login");
+    }
+
+}
