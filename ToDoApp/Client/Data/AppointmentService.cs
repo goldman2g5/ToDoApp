@@ -10,7 +10,7 @@ namespace ToDoApp.Client.Data
 
         public static async Task<List<AppointmentData>> GetAll()
         {
-            HttpResponseMessage response = await client.GetAsync("https://localhost:7093/api/AppointmentData");
+            HttpResponseMessage response = await client.GetAsync("https://localhost:7124/api/AppointmentData");
             string json = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<List<AppointmentData>>(json);
@@ -18,7 +18,7 @@ namespace ToDoApp.Client.Data
 
         public static async Task<AppointmentData> GetById(int id)
         {
-            HttpResponseMessage response = await client.GetAsync($"https://localhost:7093/api/AppointmentData/{id}");
+            HttpResponseMessage response = await client.GetAsync($"https://localhost:7124/api/AppointmentData/{id}");
             string json = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<AppointmentData>(json);
@@ -28,7 +28,7 @@ namespace ToDoApp.Client.Data
         {
             string json = JsonConvert.SerializeObject(appointmentData);
             StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.PutAsync($"https://localhost:7093/api/AppointmentData/{appointmentData.Id}", content);
+            HttpResponseMessage response = await client.PutAsync($"https://localhost:7124/api/AppointmentData/{appointmentData.Id}", content);
             json = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<AppointmentData>(json);
@@ -38,7 +38,7 @@ namespace ToDoApp.Client.Data
         {
             string json = JsonConvert.SerializeObject(appointmentData);
             StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.PostAsync("https://localhost:7093/api/AppointmentData", content);
+            HttpResponseMessage response = await client.PostAsync("https://localhost:7124/api/AppointmentData", content);
             json = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<AppointmentData>(json);

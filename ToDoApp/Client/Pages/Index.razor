@@ -1,12 +1,14 @@
 ﻿@page "/"
 @using ToDoApp.Client.Models;
 @using ToDoApp.Client.Data;
+@using Syncfusion.Blazor.Data
 
 
 <PageTitle>Index</PageTitle>
 
-<SfSchedule TValue="AppointmentData" Height="650px" @bind-SelectedDate="@CurrentDate">
-    <ScheduleEventSettings DataSource="@DataSource"></ScheduleEventSettings>
+<SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
+    <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
+    <ScheduleEventSettings DataSource="@DataSource" TValue="AppointmentData"></ScheduleEventSettings>
     <ScheduleViews>
         <ScheduleView Option="View.Day"></ScheduleView>
         <ScheduleView Option="View.Week"></ScheduleView>
@@ -17,24 +19,28 @@
 </SfSchedule>
 
 @code {
-    DateTime CurrentDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
     SfSchedule<AppointmentData> ScheduleRef;
-    HttpClient client = new HttpClient();
 
-    List<AppointmentData> DataSource = new List<AppointmentData>
+    List<AppointmentData> DataSource = new List<AppointmentData>();
+
+    string Status = "";
+
+    public async void OnActionCompleted(ActionEventArgs<AppointmentData> args)
     {
-
-        //new AppointmentData { Id = 2, Subject = "Germany", StartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(1).Day, 14, 30, 0) , EndTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(1).Day, 18, 0, 0) }
-    };
+        if (args.ActionType == ActionType.EventCreate)
+        {
+            Status = "Success";
+            await AppointmentService.Create(args.AddedRecords[0]);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        //await AppointmentService.Create(new AppointmentData { Id = 1, Subject = "Paris", StartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 13, 30, 0), EndTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 15, 30, 0) });
-        
         List<AppointmentData> appointments = await AppointmentService.GetAll();
 
         foreach (AppointmentData i in appointments)
         {
+           
             await ScheduleRef.AddEventAsync(i);
         }
     }

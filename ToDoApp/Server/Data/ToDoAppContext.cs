@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using ToDoApp.Server.Models;
 
 namespace ToDoApp.Server.Data;
@@ -27,13 +28,14 @@ public partial class ToDoAppContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("Appointment_Id");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd()
+    .Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore); 
             entity.Property(e => e.Description).IsUnicode(false);
             entity.Property(e => e.EndTime).HasColumnType("datetime");
             entity.Property(e => e.Location).IsUnicode(false);
             entity.Property(e => e.RecurrenceException).IsUnicode(false);
-            entity.Property(e => e.RecurrenceId).HasColumnName("RecurrenceID");
-            entity.Property(e => e.RecurrnceRule).IsUnicode(false);
+            entity.Property(e => e.RecurrenceID).HasColumnName("RecurrenceID");
+            entity.Property(e => e.RecurrenceRule).IsUnicode(false);
             entity.Property(e => e.StartTime).HasColumnType("datetime");
             entity.Property(e => e.Subject).IsUnicode(false);
         });
