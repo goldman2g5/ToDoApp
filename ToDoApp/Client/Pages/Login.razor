@@ -7,21 +7,37 @@
 
 <h3>Login</h3>
 
-<EditForm Model="user" OnSubmit="HandleLogin">
-    <label for="username">Name</label>
-    <InputText id="username" @bind-Value="user.Username"/>
-    <label for="password">Password</label>
-    <InputText id="password" @bind-Value="user.Password" type="password"/>
-    <button type="submit" class="btn-primary">log in</button>
-</EditForm>
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form">
+                <MudTextField T="string" Label="Username" @bind-Value="username" Required="true" RequiredError="User name is required!"  />
+                <MudTextField T="string" Label="Password" @bind-Value="password" InputType="InputType.Password" RequiredError="Password is required!" />
+                <div class="d-flex align-center justify-space-between">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" @onclick="HandleLogin">Login</MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     UserDto user = new UserDto();
-
+    string username = string.Empty;
+    string password = string.Empty;
+    MudForm form = new();
 
     async Task HandleLogin()
     {
-        var result= await client.PostAsJsonAsync("api/auth/login", user);
+        var result = await client.PostAsJsonAsync("api/auth/login", new UserDto()
+            {
+                Username = username,
+                Password = password
+            });
+        if (!result.IsSuccessStatusCode)
+        {
+            return;
+        }
         var token = await result.Content.ReadAsStringAsync();
         await LocalStorage.SetItemAsync("token", token);
         await AuthStateProvider.GetAuthenticationStateAsync();
