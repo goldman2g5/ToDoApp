@@ -44,5 +44,13 @@ namespace ToDoApp.Client.Data
             return JsonConvert.DeserializeObject<AppointmentData>(json);
         }
 
+        public static async Task<AppointmentData> Delete(int id)
+        {
+            HttpResponseMessage response = await client.DeleteAsync($"https://localhost:7124/api/AppointmentData/{id}");
+            string json = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<AppointmentData>(json);
+        }
+
     }
 }

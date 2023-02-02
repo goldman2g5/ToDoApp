@@ -59,7 +59,8 @@ public static class AppointmentDataEndpoints
             {
                 return Results.NotFound();
             }
-            
+
+            db.ChangeTracker.Clear();
             db.Update(appointmentData);
 
             await db.SaveChangesAsync();
