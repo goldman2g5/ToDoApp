@@ -1,9 +1,12 @@
 ﻿@page "/"
+@using ToDoApp.Client.Models;
+@using ToDoApp.Client.Data;
 
 
 <PageTitle>Index</PageTitle>
 
-<SfSchedule TValue=AppointmentData>
+<SfSchedule TValue="AppointmentData" Height="650px" @bind-SelectedDate="@CurrentDate">
+    <ScheduleEventSettings DataSource="@DataSource"></ScheduleEventSettings>
     <ScheduleViews>
         <ScheduleView Option="View.Day"></ScheduleView>
         <ScheduleView Option="View.Week"></ScheduleView>
@@ -13,19 +16,26 @@
     </ScheduleViews>
 </SfSchedule>
 
-
 @code {
-    public class AppointmentData
+    DateTime CurrentDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+    SfSchedule<AppointmentData> ScheduleRef;
+    HttpClient client = new HttpClient();
+
+    List<AppointmentData> DataSource = new List<AppointmentData>
     {
-        public int Id { get; set; }
-        public string Subject { get; set; }
-        public string Location { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string Description { get; set; }
-        public bool IsAllDay { get; set; }
-        public string RecurrenceRule { get; set; }
-        public string RecurrenceException { get; set; }
-        public Nullable<int> RecurrenceID { get; set; }
+
+        //new AppointmentData { Id = 2, Subject = "Germany", StartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(1).Day, 14, 30, 0) , EndTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(1).Day, 18, 0, 0) }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await AppointmentService.Create(new AppointmentData { Id = 1, Subject = "Paris", StartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 13, 30, 0), EndTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 15, 30, 0) });
+        
+        List<AppointmentData> appointments = await AppointmentService.GetAll();
+
+        foreach (AppointmentData i in appointments)
+        {
+            await ScheduleRef.AddEventAsync(i);
+        }
     }
 }
