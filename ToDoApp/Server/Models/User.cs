@@ -1,14 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using ToDoApp.Server.Data;
-namespace ToDoApp.Server.Models
+
+namespace ToDoApp.Server.Models;
+
+public partial class User
 {
-    public partial class User
-    {
-        public int Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public byte[] PasswordHash { get; set; } = new byte[0];
-        public byte[] PasswordSalt { get; set; } = new byte[0];
-    }
+    public int Id { get; set; }
+
+    public string Username { get; set; } = null!;
+
+    public byte[] PasswordHash { get; set; } = null!;
+
+    public byte[] PasswordSalt { get; set; } = null!;
+
+    public virtual ICollection<Connection> Connections { get; } = new List<Connection>();
+}
 
 
 public static class UserEndpoints
@@ -17,14 +25,14 @@ public static class UserEndpoints
     {
         routes.MapGet("/api/User", async (ToDoAppContext db) =>
         {
-            return await db.User.ToListAsync();
+            return await db.Users.ToListAsync();
         })
         .WithName("GetAllUsers")
         .Produces<List<User>>(StatusCodes.Status200OK);
 
         routes.MapGet("/api/User/{id}", async (int Id, ToDoAppContext db) =>
         {
-            return await db.User.FindAsync(Id)
+            return await db.Users.FindAsync(Id)
                 is User model
                     ? Results.Ok(model)
                     : Results.NotFound();
@@ -35,8 +43,8 @@ public static class UserEndpoints
 
         routes.MapPut("/api/User/{id}", async (int Id, User user, ToDoAppContext db) =>
         {
-            var foundModel = await db.User.FindAsync(Id);
-            
+            var foundModel = await db.Users.FindAsync(Id);
+
             if (foundModel is null)
             {
                 return Results.NotFound();
@@ -54,7 +62,7 @@ public static class UserEndpoints
 
         routes.MapPost("/api/User/", async (User user, ToDoAppContext db) =>
         {
-            db.User.Add(user);
+            db.Users.Add(user);
             await db.SaveChangesAsync();
             return Results.Created($"/Users/{user.Id}", user);
         })
@@ -64,9 +72,9 @@ public static class UserEndpoints
 
         routes.MapDelete("/api/User/{id}", async (int Id, ToDoAppContext db) =>
         {
-            if (await db.User.FindAsync(Id) is User user)
+            if (await db.Users.FindAsync(Id) is User user)
             {
-                db.User.Remove(user);
+                db.Users.Remove(user);
                 await db.SaveChangesAsync();
                 return Results.Ok(user);
             }
@@ -77,4 +85,4 @@ public static class UserEndpoints
         .Produces<User>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
     }
-}}
+}

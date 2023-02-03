@@ -49,8 +49,9 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
-app.MapAppointmentDataEndpoints();
-
 app.MapUserEndpoints();
+
+app.MapAppointmentDatumEndpoints();
+
 
 app.Run();
