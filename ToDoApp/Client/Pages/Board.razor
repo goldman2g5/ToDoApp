@@ -1,0 +1,69 @@
+﻿@page "/Board/{BoardId:int}"
+@using ToDoApp.Client.Models;
+@using ToDoApp.Client.Data;
+@using Syncfusion.Blazor.Data
+@using System.Collections.ObjectModel
+@using System.ComponentModel
+
+<AuthorizeView>
+    <Authorized>
+        <h1>@BoardId</h1>
+        <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
+            <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
+            <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
+            <ScheduleViews>
+                <ScheduleView Option="View.Day"></ScheduleView>
+                <ScheduleView Option="View.Week"></ScheduleView>
+                <ScheduleView Option="View.WorkWeek"></ScheduleView>
+                <ScheduleView Option="View.Month"></ScheduleView>
+                <ScheduleView Option="View.Agenda"></ScheduleView>
+            </ScheduleViews>
+        </SfSchedule>
+    </Authorized>
+    <NotAuthorized>
+        <img src="https://i.gifer.com/origin/51/51f1ea94effbb251598e67e8522e58f5.gif" />
+    </NotAuthorized>
+</AuthorizeView>
+<PageTitle>Index</PageTitle>
+
+
+
+@code {
+    [Parameter]
+    public int BoardId { get; set; }
+
+    SfSchedule<AppointmentData> ScheduleRef;
+    List<AppointmentData> DataSource = new List<AppointmentData>();
+    string Status = "";
+    public ObservableCollection<AppointmentData> ObservableData { get; set; }
+    int uniqueid = 1;
+    protected override async Task OnInitializedAsync()
+    {
+        List<AppointmentData> appointments = await AppointmentService.GetAll();
+        ObservableData = new ObservableCollection<AppointmentData>(appointments);
+    }
+    public async void OnActionCompleted(ActionEventArgs<AppointmentData> args)
+    {
+        if (args.ActionType == ActionType.EventCreate)
+        {
+            AppointmentData record = args.AddedRecords[0];
+            Status = "Success";
+            await AppointmentService.Create(args.AddedRecords[0]);
+        }
+
+        if (args.ActionType == ActionType.EventRemove)
+        {
+            args.Cancel = true;
+            AppointmentData record = args.DeletedRecords[0];
+            await AppointmentService.Delete(record.Id);
+
+        }
+
+        if (args.ActionType == ActionType.EventChange)
+        {
+            AppointmentData record = args.ChangedRecords[0];
+            await AppointmentService.Update(record);
+        }
+    }
+
+}

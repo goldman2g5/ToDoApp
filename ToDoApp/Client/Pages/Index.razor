@@ -1,65 +1,51 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
 @using ToDoApp.Client.Models;
 @using ToDoApp.Client.Data;
 @using Syncfusion.Blazor.Data
 @using System.Collections.ObjectModel
 @using System.ComponentModel
 
-<AuthorizeView>
-    <Authorized>
-        <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
-            <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
-            <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
-            <ScheduleViews>
-                <ScheduleView Option="View.Day"></ScheduleView>
-                <ScheduleView Option="View.Week"></ScheduleView>
-                <ScheduleView Option="View.WorkWeek"></ScheduleView>
-                <ScheduleView Option="View.Month"></ScheduleView>
-                <ScheduleView Option="View.Agenda"></ScheduleView>
-            </ScheduleViews>
-        </SfSchedule>
-    </Authorized>
-    <NotAuthorized>
-        <img src="https://i.gifer.com/origin/51/51f1ea94effbb251598e67e8522e58f5.gif" />
-    </NotAuthorized>
-</AuthorizeView>
-<PageTitle>Index</PageTitle>
+<MudButton @onclick=NewBoard>New Board</MudButton>
 
+
+<MudGrid Spacing="5" Justify="Justify.Center">
+    @foreach (BoardClient i in Boards)
+    {
+                    <MudItem>
+                        <MudCard>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h5">@i.Name</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => GoToBoard(i.Id)">Open</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+    }
+</MudGrid>
 
 
 @code {
-    SfSchedule<AppointmentData> ScheduleRef;
-    List<AppointmentData> DataSource = new List<AppointmentData>();
-    string Status = "";
-    public ObservableCollection<AppointmentData> ObservableData { get; set; }
-    int uniqueid = 1;
+    public List<BoardClient> Boards = new List<BoardClient>();
+
+
     protected override async Task OnInitializedAsync()
     {
-        List<AppointmentData> appointments = await AppointmentService.GetAll();
-        ObservableData = new ObservableCollection<AppointmentData>(appointments);
+        Boards = await BoardService.GetAll();
     }
-    public async void OnActionCompleted(ActionEventArgs<AppointmentData> args)
+
+    public void NewBoard()
     {
-        if (args.ActionType == ActionType.EventCreate)
-        {
-            AppointmentData record = args.AddedRecords[0];
-            Status = "Success";
-            await AppointmentService.Create(args.AddedRecords[0]);
-        }
-
-        if (args.ActionType == ActionType.EventRemove)
-        {
-            args.Cancel = true;
-            AppointmentData record = args.DeletedRecords[0];
-            await AppointmentService.Delete(record.Id);
-
-        }
-
-        if (args.ActionType == ActionType.EventChange)
-        {
-            AppointmentData record = args.ChangedRecords[0];
-            await AppointmentService.Update(record);
-        }
+        BoardClient board = new BoardClient();
+        board.Name = "bebra board";
+        Boards.Add(board);
+        BoardService.Create(board);
+        StateHasChanged();
     }
 
+    public void GoToBoard(int id)
+    {
+        NavigationManager.NavigateTo($"/Board/{id}");
+    }
 }

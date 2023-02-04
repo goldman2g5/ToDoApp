@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.ResponseCompression;
+﻿using Microsoft.AspNetCore.ResponseCompression;
 using ToDoApp.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,6 +52,8 @@ app.MapFallbackToFile("index.html");
 app.MapUserEndpoints();
 
 app.MapAppointmentDatumEndpoints();
+
+app.MapBoardEndpoints();
 
 
 app.Run();
