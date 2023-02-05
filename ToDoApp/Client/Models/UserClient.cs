@@ -10,9 +10,5 @@ public partial class UserClient
 
     public string Username { get; set; } = null!;
 
-    public byte[] PasswordHash { get; set; } = null!;
-
-    public byte[] PasswordSalt { get; set; } = null!;
-
     public virtual ICollection<ConnectionClient> Connections { get; } = new List<ConnectionClient>();
 }

@@ -51,5 +51,13 @@ namespace ToDoApp.Client.Data
 
             return JsonConvert.DeserializeObject<BoardClient>(json);
         }
+       
+        //public static async Task<BoardClient> GetByUserId(int userId)
+        //{
+        //    HttpResponseMessage response = await client.GetAsync($"https://localhost:7124/api/Board/GetByUserId/{userId}");
+        //    string json = await response.Content.ReadAsStringAsync();
+
+        //    return JsonConvert.DeserializeObject<BoardClient>(json);
+        //}
     }
 }

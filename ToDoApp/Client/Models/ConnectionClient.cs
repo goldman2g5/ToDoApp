@@ -12,6 +12,8 @@ public partial class ConnectionClient
 
     public int Board { get; set; }
 
+    public bool? IsCreator { get; set; }
+
     public virtual BoardClient BoardNavigation { get; set; } = null!;
 
     public virtual UserClient UserNavigation { get; set; } = null!;

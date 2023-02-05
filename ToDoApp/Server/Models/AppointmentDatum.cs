@@ -26,6 +26,10 @@ public partial class AppointmentDatum
     public string? RecurrenceException { get; set; }
 
     public int? RecurrenceId { get; set; }
+
+    public int? Board { get; set; }
+
+    public virtual Board? BoardNavigation { get; set; }
 }
 
 

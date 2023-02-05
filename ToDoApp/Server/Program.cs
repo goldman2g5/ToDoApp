@@ -55,5 +55,7 @@ app.MapAppointmentDatumEndpoints();
 
 app.MapBoardEndpoints();
 
+app.MapConnectionEndpoints();
+
 
 app.Run();

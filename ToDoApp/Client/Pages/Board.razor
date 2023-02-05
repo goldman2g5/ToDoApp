@@ -36,10 +36,10 @@
     List<AppointmentData> DataSource = new List<AppointmentData>();
     string Status = "";
     public ObservableCollection<AppointmentData> ObservableData { get; set; }
-    int uniqueid = 1;
     protected override async Task OnInitializedAsync()
     {
         List<AppointmentData> appointments = await AppointmentService.GetAll();
+        appointments = appointments.Where(x => x.Board == BoardId).ToList();
         ObservableData = new ObservableCollection<AppointmentData>(appointments);
     }
     public async void OnActionCompleted(ActionEventArgs<AppointmentData> args)
@@ -48,7 +48,8 @@
         {
             AppointmentData record = args.AddedRecords[0];
             Status = "Success";
-            await AppointmentService.Create(args.AddedRecords[0]);
+            record.Board = BoardId;
+            await AppointmentService.Create(record);
         }
 
         if (args.ActionType == ActionType.EventRemove)

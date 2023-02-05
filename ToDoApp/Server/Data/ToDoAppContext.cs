@@ -34,7 +34,6 @@ public partial class ToDoAppContext : DbContext
         modelBuilder.Entity<AppointmentDatum>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Appointment_Id");
-
             entity.Property(e => e.Id).ValueGeneratedOnAdd()
                 .Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
             entity.Property(e => e.Description).IsUnicode(false);
@@ -45,6 +44,10 @@ public partial class ToDoAppContext : DbContext
             entity.Property(e => e.RecurrenceRule).IsUnicode(false);
             entity.Property(e => e.StartTime).HasColumnType("datetime");
             entity.Property(e => e.Subject).IsUnicode(false);
+
+            entity.HasOne(d => d.BoardNavigation).WithMany(p => p.AppointmentData)
+                .HasForeignKey(d => d.Board)
+                .HasConstraintName("FK_AppointmentData_Board");
         });
 
         modelBuilder.Entity<Board>(entity =>

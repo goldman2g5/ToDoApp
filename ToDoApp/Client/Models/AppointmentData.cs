@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using ToDoApp.Client.Pages;
 
 namespace ToDoApp.Client.Models
 {
@@ -23,6 +24,8 @@ namespace ToDoApp.Client.Models
         public string RecurrenceRule { get; set; }
         public string RecurrenceException { get; set; }
         public Nullable<int> RecurrenceID { get; set; }
+        public int? Board { get; set; }
+        public virtual Board? BoardNavigation { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)

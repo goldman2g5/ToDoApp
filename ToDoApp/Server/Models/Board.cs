@@ -11,6 +11,8 @@ public partial class Board
 
     public string Name { get; set; } = null!;
 
+    public virtual ICollection<AppointmentDatum> AppointmentData { get; } = new List<AppointmentDatum>();
+
     public virtual ICollection<Connection> Connections { get; } = new List<Connection>();
 }
 
@@ -70,6 +72,16 @@ public static class BoardEndpoints
         {
             if (await db.Boards.FindAsync(Id) is Board board)
             {
+                //ПОЧЕМУ НЕ РАБОТАЕТ????? ? БЛЯДЛЬ
+                //foreach (var appointment in board.AppointmentData)
+                //{
+                //    Console.WriteLine("bebra");
+                //    db.AppointmentData.Remove(appointment);
+                //}
+                //foreach (var connection in board.Connections)
+                //{
+                //    db.Connections.Remove(connection);
+                //}
                 db.Boards.Remove(board);
                 await db.SaveChangesAsync();
                 return Results.Ok(board);

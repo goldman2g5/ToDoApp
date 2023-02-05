@@ -5,47 +5,131 @@
 @using Syncfusion.Blazor.Data
 @using System.Collections.ObjectModel
 @using System.ComponentModel
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
-<MudButton @onclick=NewBoard>New Board</MudButton>
+<AuthorizeView>
+    <span>authorized as @context.User.Identity.Name</span>
+    <MudButton @onclick="CreateBoard">New Board</MudButton>
 
 
-<MudGrid Spacing="5" Justify="Justify.Center">
-    @foreach (BoardClient i in Boards)
-    {
-                    <MudItem>
-                        <MudCard>
-                            <MudCardContent>
-                                <MudText Typo="Typo.h5">@i.Name</MudText>
-                            </MudCardContent>
-                            <MudCardActions>
-                                <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => GoToBoard(i.Id)">Open</MudButton>
-                            </MudCardActions>
-                        </MudCard>
-                    </MudItem>
-    }
-</MudGrid>
+    <MudGrid Spacing="5" Justify="Justify.Center">
+        @foreach (BoardClient i in Boards)
+        {
+            <MudItem>
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5">@i.Name</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => GoToBoard(i.Id)">Open</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Warning" @onclick="() => DeleteBoard(i.Id)">Delete</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</AuthorizeView>
+
+
 
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
     public List<BoardClient> Boards = new List<BoardClient>();
+
+    string username;
 
 
     protected override async Task OnInitializedAsync()
     {
-        Boards = await BoardService.GetAll();
+        UpdateBoards();
     }
 
-    public void NewBoard()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        BoardClient board = new BoardClient();
-        board.Name = "bebra board";
-        Boards.Add(board);
-        BoardService.Create(board);
+
+        if (firstRender)
+        {
+            // Do work to load page data and set properties
+        }
+    }
+
+    public async void UpdateBoards()
+    {
+        List<BoardClient> AllBoards = await BoardService.GetAll();
+        List<ConnectionClient> connections = await ConnectionService.GetAll();
+        List<UserClient> users = await UserClientService.GetAll();
+
+        var state = await authenticationStateTask;
+        username = state.User.Identity.Name;
+        int userid = users.Find(x => x.Username == username).Id;
+
+
+        List<int> boardsids = connections.Where(x => x.User == userid).Select(x => x.Board).ToList();
+        Boards = AllBoards.Where(x => boardsids.Contains(x.Id)).ToList();
         StateHasChanged();
     }
 
-    public void GoToBoard(int id)
+    public async void CreateBoard()
     {
-        NavigationManager.NavigateTo($"/Board/{id}");
+        var state = await authenticationStateTask;
+        string UserName = state.User.Identity.Name;
+        BoardClient newBoard = new BoardClient
+            {
+                Name =  $"{UserName}'s board"
+        };
+        BoardClient board = await BoardService.Create(newBoard);
+        await CreateConnection(board.Id, true);
+        UpdateBoards();
+    }
+
+    public async void DeleteBoard(int id)
+    {
+        List<AppointmentData> appoinments = await AppointmentService.GetAll();
+        List<ConnectionClient> connections = await ConnectionService.GetAll();
+        appoinments = appoinments.Where(x => x.Board == id).ToList();
+        connections = connections.Where(x => x.Board == id).ToList();
+        foreach(var i in appoinments)
+        {
+            await AppointmentService.Delete(i.Id);
+        }
+        foreach(var i in connections)
+        {
+            await ConnectionService.Delete(i.Id);
+        }
+
+
+        await BoardService.Delete(id);
+        Boards = Boards.Where(x => x.Id != id).ToList();
+        StateHasChanged();
+    }
+
+
+    public async Task CreateConnection(int BoardId, bool isCreator)
+    {
+        //Оптимизировать
+        List<UserClient> users = await UserClientService.GetAll();
+        var state = await authenticationStateTask;
+        string UserName = state.User.Identity.Name;
+        int userid = users.Find(x => x.Username == UserName).Id;
+        List<ConnectionClient> connections = await ConnectionService.GetAll();
+        if (!connections.Any(x => x.User == userid & x.Board == BoardId))
+        {
+            ConnectionClient connection = new ConnectionClient
+                {
+                    User = userid,
+                    Board = BoardId,
+                    IsCreator = isCreator
+                };
+            ConnectionService.Create(connection);
+        }
+    }
+
+    public async void GoToBoard(int BoardId)
+    {
+        await CreateConnection(BoardId, false);
+        NavigationManager.NavigateTo($"/Board/{BoardId}");
     }
 }
