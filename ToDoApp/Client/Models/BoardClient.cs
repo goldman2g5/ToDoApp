@@ -10,6 +10,8 @@ public partial class BoardClient
     public int Id { get; set; }
 
     public string Name { get; set; } = null!;
+
+    public string? InviteCode { get; set; }
     public virtual ICollection<AppointmentData> AppointmentData { get; } = new List<AppointmentData>();
 
     public virtual ICollection<ConnectionClient> Connections { get; } = new List<ConnectionClient>();

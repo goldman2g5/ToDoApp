@@ -7,7 +7,6 @@
 
 <AuthorizeView>
     <Authorized>
-        <h1>@BoardId</h1>
         <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
             <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
             <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>

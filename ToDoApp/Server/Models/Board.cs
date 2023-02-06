@@ -11,6 +11,8 @@ public partial class Board
 
     public string Name { get; set; } = null!;
 
+    public string? InviteCode { get; set; }
+
     public virtual ICollection<AppointmentDatum> AppointmentData { get; } = new List<AppointmentDatum>();
 
     public virtual ICollection<Connection> Connections { get; } = new List<Connection>();
@@ -48,6 +50,7 @@ public static class BoardEndpoints
                 return Results.NotFound();
             }
             
+            db.ChangeTracker.Clear();
             db.Update(board);
 
             await db.SaveChangesAsync();

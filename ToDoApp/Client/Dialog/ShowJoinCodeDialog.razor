@@ -1,0 +1,41 @@
+﻿@using ToDoApp.Client.Models
+@using ToDoApp.Client.Data
+<MudDialog>
+    <DialogContent>
+        <MudText>@joincode</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    MudForm form;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public BoardClient Board { get; set; } = new BoardClient();
+
+    string joincode = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Board != null)
+        {
+            if (Board.InviteCode != null)
+            {
+                joincode = Board.InviteCode;
+            }
+            else
+            {
+                joincode = Guid.NewGuid().ToString().Substring(0, 5);
+                Board.InviteCode = joincode;
+                await BoardService.Update(Board);
+
+            }
+        }
+    }
+
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}

@@ -2,31 +2,60 @@
 @inject NavigationManager NavigationManager
 @using ToDoApp.Client.Models;
 @using ToDoApp.Client.Data;
-@using Syncfusion.Blazor.Data
-@using System.Collections.ObjectModel
-@using System.ComponentModel
-@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@using ToDoApp.Client.Dialog;
+@inject ILocalStorageService LocalStorage
+@inject IDialogService DialogService
 
 <AuthorizeView>
-    <span>authorized as @context.User.Identity.Name</span>
-    <MudButton @onclick="CreateBoard">New Board</MudButton>
-
-
-    <MudGrid Spacing="5" Justify="Justify.Center">
-        @foreach (BoardClient i in Boards)
-        {
-            <MudItem>
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.h5">@i.Name</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="() => GoToBoard(i.Id)">Open</MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Warning" @onclick="() => DeleteBoard(i.Id)">Delete</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudItem>
-        }
+    <MudGrid Justify="Justify.Center">
+        <MudItem>
+            <MudPaper Height="1000px" Width="600px">
+                <MudContainer>
+                    <MudText>Your boards</MudText>
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="CreateBoard">New Board</MudButton>
+                    <MudGrid Spacing="3" Justify="Justify.Center">
+                        @foreach (BoardClient i in Boards)
+                        {
+                            <MudItem>
+                                <MudCard>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h5">@i.Name</MudText>
+                                    </MudCardContent>
+                                    <MudCardActions>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Kayaking" @onclick="() => GoToBoard(i.Id)">Open</MudButton>
+                                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" @onclick="() => DeleteBoard(i.Id)">Delete</MudButton>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudContainer>
+            </MudPaper>
+        </MudItem>
+        <MudItem>
+            <MudPaper Height="1000px" Width="600px">
+                <MudContainer>
+                    <MudText>Your boards</MudText>
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.People" Color="Color.Primary" @onclick="JoinBoard">Join Board</MudButton>
+                </MudContainer>
+                <MudGrid Spacing="3" Justify="Justify.Center">
+                    @foreach (BoardClient i in GroupBoards)
+                    {
+                        <MudItem>
+                            <MudCard>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.h5">@i.Name</MudText>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Kayaking" @onclick="() => GoToBoard(i.Id)">Open</MudButton>
+                                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" @onclick="() => DeleteBoard(i.Id)">Delete</MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
     </MudGrid>
 </AuthorizeView>
 
@@ -38,6 +67,7 @@
     private Task<AuthenticationState> authenticationStateTask { get; set; }
 
     public List<BoardClient> Boards = new List<BoardClient>();
+    public List<BoardClient> GroupBoards = new List<BoardClient>();
 
     string username;
 
@@ -64,26 +94,29 @@
 
         var state = await authenticationStateTask;
         username = state.User.Identity.Name;
+        if (username == null)
+            return;
         int userid = users.Find(x => x.Username == username).Id;
 
 
-        List<int> boardsids = connections.Where(x => x.User == userid).Select(x => x.Board).ToList();
-        Boards = AllBoards.Where(x => boardsids.Contains(x.Id)).ToList();
+        connections = connections.Where(x => x.User == userid).ToList();
+        Boards = AllBoards.Where(x => connections.Where(x => x.IsCreator == true).Select(x => x.Board).Contains(x.Id)).ToList();
+        GroupBoards = AllBoards.Where(x => connections.Where(x => x.IsCreator == false).Select(x => x.Board).Contains(x.Id)).ToList();
         StateHasChanged();
     }
 
-    public async void CreateBoard()
-    {
-        var state = await authenticationStateTask;
-        string UserName = state.User.Identity.Name;
-        BoardClient newBoard = new BoardClient
-            {
-                Name =  $"{UserName}'s board"
-        };
-        BoardClient board = await BoardService.Create(newBoard);
-        await CreateConnection(board.Id, true);
-        UpdateBoards();
-    }
+    //public async void CreateBoard()
+    //{
+    //    var state = await authenticationStateTask;
+    //    string UserName = state.User.Identity.Name;
+    //    BoardClient newBoard = new BoardClient
+    //        {
+    //            Name =  $"{UserName}'s new board"
+    //    };
+    //    BoardClient board = await BoardService.Create(newBoard);
+    //    await CreateConnection(board.Id, true);
+    //    UpdateBoards();
+    //}
 
     public async void DeleteBoard(int id)
     {
@@ -105,7 +138,38 @@
         Boards = Boards.Where(x => x.Id != id).ToList();
         StateHasChanged();
     }
-
+    
+    private async void CreateBoard()
+    {    
+        DialogOptions closeOnEscapeKey = new DialogOptions() { CloseOnEscapeKey = true };
+        DialogResult? dialogResult = await (await DialogService.ShowAsync<CreateBoardDialog>("New Board", closeOnEscapeKey)).Result;
+        string name = (string)dialogResult.Data;
+        if (name == null) return;
+        BoardClient newBoard = new BoardClient
+        {
+            Name = name
+        };
+        BoardClient board = await BoardService.Create(newBoard);
+        await CreateConnection(board.Id, true);
+        UpdateBoards();
+    }
+    
+    public async void JoinBoard()
+    {
+        DialogOptions closeOnEscapeKey = new DialogOptions() { CloseOnEscapeKey = true };
+        DialogResult? dialogResult = await (await DialogService.ShowAsync<JoinBoardDialog>("Join Board", closeOnEscapeKey)).Result;
+        if (dialogResult == null) return;
+        string code = (string)dialogResult.Data;
+        List<BoardClient> boards = await BoardService.GetAll();
+        BoardClient board = boards.Find(x => x.InviteCode == code);
+        if (board == null)
+        {
+            await DialogService.ShowMessageBox("Error", "Board not found");
+            return;
+        }
+        await CreateConnection(board.Id, false);
+        UpdateBoards();
+    }
 
     public async Task CreateConnection(int BoardId, bool isCreator)
     {
@@ -123,9 +187,10 @@
                     Board = BoardId,
                     IsCreator = isCreator
                 };
-            ConnectionService.Create(connection);
+            await ConnectionService.Create(connection);
         }
     }
+
 
     public async void GoToBoard(int BoardId)
     {

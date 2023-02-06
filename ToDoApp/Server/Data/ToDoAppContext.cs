@@ -57,6 +57,9 @@ public partial class ToDoAppContext : DbContext
             entity.ToTable("Board");
 
             entity.Property(e => e.Name).IsUnicode(false);
+
+            entity.Property(e => e.InviteCode).HasColumnName("InviteCode");
+
         });
 
         modelBuilder.Entity<Connection>(entity =>

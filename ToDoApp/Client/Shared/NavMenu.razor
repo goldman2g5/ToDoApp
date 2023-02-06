@@ -1,29 +1,55 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">ToDoApp</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿@using ToDoApp.Client.Dialog
+@using ToDoApp.Client.Models
+@using ToDoApp.Client.Data
+@inject NavigationManager NavigationManager;
+@inject IDialogService DialogService
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-    </nav>
-</div>
+
+<MudNavMenu>
+    <MudNavGroup Title="Settings">
+        <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <AuthorizeView>
+            <Authorized>
+                <MudNavLink Href="/" Icon="@Icons.Material.Filled.AccountCircle">Account</MudNavLink>
+                <MudNavLink Href="/Settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+@*                @if (isOnBoard)
+                {*@
+                <MudNavLink Icon="@Icons.Material.Filled.PersonAdd" @onclick="ShowCode">Invite code</MudNavLink>
+                @*}*@
+            </Authorized>
+            <NotAuthorized>
+                                        
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudNavGroup>
+</MudNavMenu>
 
 @code {
-    private bool collapseNavMenu = true;
+    bool isOnBoard = false;
+    
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    private void ToggleNavMenu()
+    
+    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        collapseNavMenu = !collapseNavMenu;
+        if (NavigationManager.Uri.Contains("Board"))
+        {
+            isOnBoard = true;
+        }
     }
+
+
+    public async Task ShowCode()
+    {
+        BoardClient board = await BoardService.GetById(Int32.Parse(NavigationManager.Uri.Split('/').Last()));
+        
+        DialogParameters parameters = new DialogParameters { ["Board"] = board };
+        DialogOptions closeOnEscapeKey = new DialogOptions() { CloseOnEscapeKey = true };
+        await DialogService.ShowAsync<ShowJoinCodeDialog>("Join Code:", parameters);
+    }
+
+
+
 }
