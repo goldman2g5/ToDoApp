@@ -86,7 +86,7 @@
         }
     }
 
-    public async void UpdateBoards()
+    public async Task UpdateBoards()
     {
         List<BoardClient> AllBoards = await BoardService.GetAll();
         List<ConnectionClient> connections = await ConnectionService.GetAll();
@@ -118,25 +118,31 @@
     //    UpdateBoards();
     //}
 
-    public async void DeleteBoard(int id)
+    public async void DeleteBoard(int BoardId)
     {
+        int userid = await GetUserId();
         List<AppointmentData> appoinments = await AppointmentService.GetAll();
         List<ConnectionClient> connections = await ConnectionService.GetAll();
-        appoinments = appoinments.Where(x => x.Board == id).ToList();
-        connections = connections.Where(x => x.Board == id).ToList();
-        foreach(var i in appoinments)
+        if (connections.Where(x => x.Board == BoardId & x.User == userid).Any(x => x.IsCreator == true))
         {
-            await AppointmentService.Delete(i.Id);
+            foreach (var i in appoinments.Where(x => x.Board == BoardId))
+            {
+                await AppointmentService.Delete(i.Id);
+            }
+            foreach (var i in connections.Where(x => x.Board == BoardId))
+            {
+                await ConnectionService.Delete(i.Id);
+            }
+            await BoardService.Delete(BoardId);
         }
-        foreach(var i in connections)
+        else
         {
-            await ConnectionService.Delete(i.Id);
+            foreach (var i in connections.Where(x => x.User == userid & x.Board == BoardId))
+            {
+                await ConnectionService.Delete(i.Id);
+            }
         }
-
-
-        await BoardService.Delete(id);
-        Boards = Boards.Where(x => x.Id != id).ToList();
-        StateHasChanged();
+        await UpdateBoards();
     }
     
     private async void CreateBoard()
@@ -151,7 +157,7 @@
         };
         BoardClient board = await BoardService.Create(newBoard);
         await CreateConnection(board.Id, true);
-        UpdateBoards();
+        await UpdateBoards();
     }
     
     public async void JoinBoard()
@@ -168,16 +174,14 @@
             return;
         }
         await CreateConnection(board.Id, false);
-        UpdateBoards();
+        await UpdateBoards();
     }
 
     public async Task CreateConnection(int BoardId, bool isCreator)
     {
         //Оптимизировать
         List<UserClient> users = await UserClientService.GetAll();
-        var state = await authenticationStateTask;
-        string UserName = state.User.Identity.Name;
-        int userid = users.Find(x => x.Username == UserName).Id;
+        int userid = await GetUserId();
         List<ConnectionClient> connections = await ConnectionService.GetAll();
         if (!connections.Any(x => x.User == userid & x.Board == BoardId))
         {
@@ -189,6 +193,15 @@
                 };
             await ConnectionService.Create(connection);
         }
+    }
+
+    public async Task<int> GetUserId()
+    {
+        List<UserClient> users = await UserClientService.GetAll();
+        var state = await authenticationStateTask;
+        string UserName = state.User.Identity.Name;
+        int userid = users.Find(x => x.Username == UserName).Id;
+        return userid;
     }
 
 
