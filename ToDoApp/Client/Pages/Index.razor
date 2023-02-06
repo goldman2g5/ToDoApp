@@ -14,6 +14,13 @@
                     <MudText>Your boards</MudText>
                     <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="CreateBoard">New Board</MudButton>
                     <MudGrid Spacing="3" Justify="Justify.Center">
+                        @if (Boards.Count == 0)
+                        {
+                            <MudItem>
+                                <img src="https://media.tenor.com/B85QfhcxFKMAAAAd/rat-spinning.gif" Height="200" With="100" />
+                            </MudItem>
+                            
+                        }
                         @foreach (BoardClient i in Boards)
                         {
                             <MudItem>
@@ -39,6 +46,14 @@
                     <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.People" Color="Color.Primary" @onclick="JoinBoard">Join Board</MudButton>
                 </MudContainer>
                 <MudGrid Spacing="3" Justify="Justify.Center">
+                    @if (GroupBoards.Count == 0)
+                    {
+                        <MudItem>
+                            <MudItem>
+                                <img src="https://media.tenor.com/B85QfhcxFKMAAAAd/rat-spinning.gif" Height="200" With="100" />
+                            </MudItem>
+                        </MudItem>
+                    }
                     @foreach (BoardClient i in GroupBoards)
                     {
                         <MudItem>
