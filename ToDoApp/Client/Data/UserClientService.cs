@@ -15,5 +15,12 @@ namespace ToDoApp.Client.Data
             return JsonConvert.DeserializeObject<List<UserClient>>(json);
         }
 
+        public static async Task<UserClient> GetById(int id)
+        {
+            HttpResponseMessage response = await client.GetAsync($"https://localhost:7124/api/User/{id}");
+            string json = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<UserClient>(json);
+        }
     }
 }

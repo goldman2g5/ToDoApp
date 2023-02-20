@@ -3,6 +3,7 @@ using ToDoApp.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ToDoApp.Server.Data;
+using ToDoApp.Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
+builder.Services.AddResponseCompression(options =>
+     options.MimeTypes = ResponseCompressionDefaults
+     .MimeTypes
+     .Concat(new[] { "application/octet-stream" })
+);
+
+
 builder.Services.AddDbContext<ToDoAppContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ToDoAppServerContext") ?? throw new InvalidOperationException("Connection string 'ToDoAppServerContext' not found.")));
 
@@ -41,12 +50,13 @@ app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
-
+app.UseResponseCompression();
 app.UseRouting();
 
 
 app.MapRazorPages();
 app.MapControllers();
+app.MapHub<ChatHub>("/chathub");
 app.MapFallbackToFile("index.html");
 
 app.MapUserEndpoints();

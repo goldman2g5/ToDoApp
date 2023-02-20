@@ -4,20 +4,52 @@
 @using Syncfusion.Blazor.Data
 @using System.Collections.ObjectModel
 @using System.ComponentModel
+@using ToDoApp.Client.Components;
+@inject NavigationManager NavigationManager
 
 <AuthorizeView>
     <Authorized>
-        <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
-            <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
-            <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
-            <ScheduleViews>
-                <ScheduleView Option="View.Day"></ScheduleView>
-                <ScheduleView Option="View.Week"></ScheduleView>
-                <ScheduleView Option="View.WorkWeek"></ScheduleView>
-                <ScheduleView Option="View.Month"></ScheduleView>
-                <ScheduleView Option="View.Agenda"></ScheduleView>
-            </ScheduleViews>
-        </SfSchedule>
+        
+        <MudGrid>
+            <MudItem>
+                <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
+                    <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
+                    <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
+                    <ScheduleViews>
+                        <ScheduleView Option="View.Day"></ScheduleView>
+                        <ScheduleView Option="View.Week"></ScheduleView>
+                        <ScheduleView Option="View.WorkWeek"></ScheduleView>
+                        <ScheduleView Option="View.Month"></ScheduleView>
+                        <ScheduleView Option="View.Agenda"></ScheduleView>
+                    </ScheduleViews>
+                </SfSchedule>
+            </MudItem>
+
+            <MudItem>
+                @if (!IsConnected)
+                {
+                }
+                else
+                {
+                    <textarea style="width:100%; height:500px" @ref="TextAreaRef" readonly>@messages</textarea>
+                    <div class="input-group">
+                        <input @bind-value="message"
+                           @bind-value:event="oninput"
+                           @onkeyup="HandleInput" class="form-control" />
+                        <button class="btn btn-primary form-group-append"
+                            @onclick="Send"
+                            disabled="@(!IsConnected)">
+                            Send
+                        </button>
+                    </div>
+                }
+            </MudItem>
+        </MudGrid>
+
+
+
+
+
     </Authorized>
     <NotAuthorized>
         <img src="https://i.gifer.com/origin/51/51f1ea94effbb251598e67e8522e58f5.gif" />
@@ -30,16 +62,39 @@
 @code {
     [Parameter]
     public int BoardId { get; set; }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
 
     SfSchedule<AppointmentData> ScheduleRef;
     List<AppointmentData> DataSource = new List<AppointmentData>();
     string Status = "";
     public ObservableCollection<AppointmentData> ObservableData { get; set; }
+    private HubConnection? hubConnection;
+    private string messages = string.Empty;
+    private string username = string.Empty;
+    private string message = string.Empty;
+    ElementReference TextAreaRef;
     protected override async Task OnInitializedAsync()
     {
         List<AppointmentData> appointments = await AppointmentService.GetAll();
         appointments = appointments.Where(x => x.Board == BoardId).ToList();
         ObservableData = new ObservableCollection<AppointmentData>(appointments);
+        hubConnection = new HubConnectionBuilder().
+        WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
+       .Build();
+
+        hubConnection.On<string, string, string>("ReciveMessage", (user, message, chatid) =>
+        {
+            if (chatid == BoardId.ToString())
+            {
+                var msg = $"{(string.IsNullOrEmpty(user) ? "" : user + ": ")} {message}";
+                messages += msg + "\n";
+                StateHasChanged();
+            }
+
+        });
+
+        await hubConnection.StartAsync();
     }
     public async void OnActionCompleted(ActionEventArgs<AppointmentData> args)
     {
@@ -63,6 +118,33 @@
         {
             AppointmentData record = args.ChangedRecords[0];
             await AppointmentService.Update(record);
+        }
+    }
+
+    private async Task HandleInput(KeyboardEventArgs args)
+    {
+        if (args.Key.Equals("Enter"))
+        {
+            await Send();
+        }
+    }
+    private async Task Send()
+    {
+        var state = await authenticationStateTask;
+        if (hubConnection != null)
+        {
+            await hubConnection.SendAsync("SendMessage", $"{state.User.Identity.Name}", message, BoardId.ToString());
+            message = string.Empty;
+        }
+    }
+
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.DisposeAsync();
         }
     }
 
