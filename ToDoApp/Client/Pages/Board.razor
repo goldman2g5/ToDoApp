@@ -5,6 +5,7 @@
 @using System.Collections.ObjectModel
 @using System.ComponentModel
 @using ToDoApp.Client.Components;
+@using Newtonsoft.Json;
 @inject NavigationManager NavigationManager
 
 <AuthorizeView>
@@ -94,6 +95,44 @@
 
         });
 
+        hubConnection.On<string>("ReciveSyncRequest", async (requestjson) =>
+        {
+            SyncAppointmentRequestClient request = JsonConvert.DeserializeObject<SyncAppointmentRequestClient>(requestjson);
+            AppointmentData? app = await AppointmentService.GetById(request.id);
+
+            Console.WriteLine($"Беброчка пришла {requestjson}");
+            if (app.Board == BoardId)
+            {
+                if (request.action == "Create")
+                {
+                    if (app != null)
+                    {
+                        ObservableData.Add(app);
+                        StateHasChanged();
+                    }
+                };
+
+                if (request.action == "Delete")
+                {
+                    ObservableData.RemoveAt(ObservableData.IndexOf(ObservableData.ToList().Find(x => x.Id == request.id)));
+                    StateHasChanged();
+                };
+
+
+                //if (request.action == "Update")
+                //{
+                //    if (app != null)
+                //    {
+                //        ObservableData[ObservableData.ToList().Find(x => x.Id == request.id)] == app;
+                //    }
+                //};
+            }
+
+
+
+
+        });
+
         await hubConnection.StartAsync();
     }
     public async void OnActionCompleted(ActionEventArgs<AppointmentData> args)
@@ -104,6 +143,7 @@
             Status = "Success";
             record.Board = BoardId;
             await AppointmentService.Create(record);
+            await SendSyncRequest(record.Id, "Create");
         }
 
         if (args.ActionType == ActionType.EventRemove)
@@ -111,6 +151,7 @@
             args.Cancel = true;
             AppointmentData record = args.DeletedRecords[0];
             await AppointmentService.Delete(record.Id);
+            await SendSyncRequest(record.Id, "Delete");
 
         }
 
@@ -118,6 +159,7 @@
         {
             AppointmentData record = args.ChangedRecords[0];
             await AppointmentService.Update(record);
+            await SendSyncRequest(record.Id, "Update");
         }
     }
 
@@ -135,6 +177,24 @@
         {
             await hubConnection.SendAsync("SendMessage", $"{state.User.Identity.Name}", message, BoardId.ToString());
             message = string.Empty;
+        }
+    }
+
+    private async Task SendSyncRequest(int id, string action)
+    {
+
+        if (hubConnection != null)
+        {
+            SyncAppointmentRequestClient request = new SyncAppointmentRequestClient()
+                {
+                    id = id,
+                    action = action,
+                    boardid = BoardId
+                    
+                };
+            string json = JsonConvert.SerializeObject(request);
+            Console.WriteLine($"Занюхнул беброчки {json}");
+            await hubConnection.SendAsync("SendSyncRequest", json);
         }
     }
 

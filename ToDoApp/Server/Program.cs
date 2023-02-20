@@ -57,6 +57,7 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<ChatHub>("/chathub");
+app.MapHub<AppointmentHub>("/appointmenthub");
 app.MapFallbackToFile("index.html");
 
 app.MapUserEndpoints();

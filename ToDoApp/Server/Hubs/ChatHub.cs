@@ -14,7 +14,13 @@ namespace ToDoApp.Server.Hubs
         {
             await Clients.All.SendAsync("ReciveMessage", user, message, chatid);
         }
-        
+
+        public async Task SendSyncRequest(string json)
+        {
+            Console.WriteLine($"Беброчка вкусная {json}");
+            await Clients.All.SendAsync("ReciveSyncRequest", json);
+        }
+
 
     }
 }
