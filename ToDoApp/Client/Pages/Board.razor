@@ -101,36 +101,13 @@
             AppointmentData? app = await AppointmentService.GetById(request.id);
 
             Console.WriteLine($"Беброчка пришла {requestjson}");
-            if (app.Board == BoardId)
-            {
-                if (request.action == "Create")
-                {
-                    if (app != null)
-                    {
-                        ObservableData.Add(app);
-                        StateHasChanged();
-                    }
-                };
+            //List<AppointmentData> new_appointments = await AppointmentService.GetAll();
+            //new_appointments = new_appointments.Where(x => x.Board == BoardId).ToList();
+            //ObservableData = new ObservableCollection<AppointmentData>(new_appointments);
 
-                if (request.action == "Delete")
-                {
-                    ObservableData.RemoveAt(ObservableData.IndexOf(ObservableData.ToList().Find(x => x.Id == request.id)));
-                    StateHasChanged();
-                };
-
-
-                //if (request.action == "Update")
-                //{
-                //    if (app != null)
-                //    {
-                //        ObservableData[ObservableData.ToList().Find(x => x.Id == request.id)] == app;
-                //    }
-                //};
-            }
-
-
-
-
+            BoardClient ThisBoard = await BoardService.GetById(BoardId);
+            ObservableData = new ObservableCollection<AppointmentData>(ThisBoard.AppointmentData)
+            StateHasChanged();
         });
 
         await hubConnection.StartAsync();
