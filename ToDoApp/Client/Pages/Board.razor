@@ -77,9 +77,9 @@
     ElementReference TextAreaRef;
     protected override async Task OnInitializedAsync()
     {
-        List<AppointmentData> appointments = await AppointmentService.GetAll();
-        appointments = appointments.Where(x => x.Board == BoardId).ToList();
-        ObservableData = new ObservableCollection<AppointmentData>(appointments);
+        BoardClient ThisBoard = await BoardService.GetById(BoardId);
+        ObservableData = new ObservableCollection<AppointmentData>(ThisBoard.AppointmentData)
+
         hubConnection = new HubConnectionBuilder().
         WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
        .Build();
@@ -97,13 +97,7 @@
 
         hubConnection.On<string>("ReciveSyncRequest", async (requestjson) =>
         {
-            SyncAppointmentRequestClient request = JsonConvert.DeserializeObject<SyncAppointmentRequestClient>(requestjson);
-            AppointmentData? app = await AppointmentService.GetById(request.id);
-
             Console.WriteLine($"Беброчка пришла {requestjson}");
-            //List<AppointmentData> new_appointments = await AppointmentService.GetAll();
-            //new_appointments = new_appointments.Where(x => x.Board == BoardId).ToList();
-            //ObservableData = new ObservableCollection<AppointmentData>(new_appointments);
 
             BoardClient ThisBoard = await BoardService.GetById(BoardId);
             ObservableData = new ObservableCollection<AppointmentData>(ThisBoard.AppointmentData)
