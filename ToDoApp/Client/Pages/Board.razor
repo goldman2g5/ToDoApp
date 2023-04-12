@@ -13,6 +13,11 @@
         
         <MudGrid>
             <MudItem>
+                <MudButton @onclick="exportdata">
+                    ЭСПОРТ ДАННЫХ
+                </MudButton>
+            </MudItem>
+            <MudItem>
                 <SfSchedule @ref="ScheduleRef" TValue="AppointmentData" Height="650px">
                     <ScheduleEvents TValue="AppointmentData" ActionCompleted="OnActionCompleted"></ScheduleEvents>
                     <ScheduleEventSettings DataSource="@ObservableData" TValue="AppointmentData"></ScheduleEventSettings>
@@ -75,6 +80,38 @@
     private string username = string.Empty;
     private string message = string.Empty;
     ElementReference TextAreaRef;
+
+    public async Task exportdata()
+    {
+        BoardClient board = await BoardService.GetById(BoardId);
+        List<AppointmentData> appointments = board.AppointmentData.ToList();
+
+        string filePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop); 
+
+        string output = string.Empty;
+        output += $"Board";
+        output += $"\n";
+        output += $"Id:{board.Id}\n";
+        output += $"Name:{board.Name}\n";
+
+        output += $"Appointments:";
+        output += $"\n";
+
+        foreach(var i in appointments)
+        {
+            output += $"Subject:{i.Subject}\n";
+            output += $"Starts:{i.StartTime}\n";
+            output += $"Ends:{i.EndTime}\n";
+            output += $"\n";
+        }
+
+        // Create the file and write some text to it
+        using (StreamWriter writer = new StreamWriter(filePath + "/exportedData"))
+        {
+            writer.WriteLine(output);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await UpdateAppointment();
@@ -168,7 +205,7 @@
                     id = id,
                     action = action,
                     boardid = BoardId
-                    
+
                 };
             string json = JsonConvert.SerializeObject(request);
             Console.WriteLine($"Занюхнул беброчки {json}");
